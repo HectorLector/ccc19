@@ -10,22 +10,26 @@ class CCC:
 
         with open(f_name, 'r') as f:
             borders = f.readline()
-            initial = f.readline()
-            directions = f.readline()
-
             border_x, border_y = borders.rstrip().split(' ')
             self.border_x = int(border_x) - 1
             self.border_y = int(border_y) - 1
 
+            initial = f.readline()
             x_init, y_init = initial.rstrip().split(' ')
-
             self.pos = int(x_init), int(y_init)
 
+            directions = f.readline()
             job = directions.rstrip().split(' ')
-
             job, amount = job[::2], job[1::2]
-
             self.job = list(zip(job, amount))
+
+            speed = float(f.readline().rstrip())
+            nr_spawns = int(f.readline().rstrip())
+
+            spawns = [int(f.readline().rstrip()) for _ in range(nr_spawns)]
+
+            nr_ticks = int(f.readline().rstrip())
+            ticks = [tuple(int(c) for c in f.readline().rstrip().split(' ')) for _ in range(nr_ticks)]
 
             self.dir_current = 0  # 0, 1, 2, 3 => right, down, left, up
 
