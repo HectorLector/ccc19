@@ -14,11 +14,9 @@ class Alien:
         self.direction = 0
 
     def get(self, tick):
-        return self.history[tick - self.spawn_tick]
+        return self.history[tick]
 
-    def move(self, tick, border_x, border_y):
-        if tick <= self.spawn_tick:
-            return
+    def move(self, border_x, border_y):
 
         pos = self.history[-1]
 
@@ -39,9 +37,7 @@ class Alien:
 
         self.history.append(pos)
 
-    def turn(self, tick, steps):
-        if tick <= self.spawn_tick:
-            return
+    def turn(self, steps):
         self.direction = (self.direction + steps) % 4
 
 
@@ -80,23 +76,21 @@ class CCC:
 
     def run(self):
 
-        tick = 0
         for a in self.aliens.values():
-            print(f'{0}:{a.alien_id}:{a.history[-1]}')
+            print(f'{a.alien_id}:{a.history[-1]}')
 
         for j, steps in self.job:
 
                 steps = int(steps)
                 if j == 'F':
                     for _ in range(steps):
-                        tick += 1
                         for a in self.aliens.values():
-                            a.move(tick, self.border_x, self.border_y)
-                            print(f'{tick}:{a.alien_id}:{a.history[-1]}')
+                            a.move(self.border_x, self.border_y)
+                            print(f'{a.alien_id}:{a.history[-1]}')
 
                 elif j == 'T':
                     for a in self.aliens.values():
-                        a.turn(tick, steps)
+                        a.turn(steps)
 
                 else:
                     raise NotImplementedError
