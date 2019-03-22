@@ -14,8 +14,8 @@ class CCC:
             directions = f.readline()
 
             border_x, border_y = borders.rstrip().split(' ')
-            self.border_x = int(border_x)
-            self.border_y = int(border_y)
+            self.border_x = int(border_x) - 1
+            self.border_y = int(border_y) - 1
 
             x_init, y_init = initial.rstrip().split(' ')
 
@@ -30,11 +30,17 @@ class CCC:
             self.dir_current = 0  # 0, 1, 2, 3 => right, down, left, up
 
     def run(self):
+
+        positions = [self.pos]
+        print(positions[-1])
+
         for j, steps in self.job:
 
             steps = int(steps)
             if j == 'F':
-                self.pos = self.move(self.pos, self.dir_current, steps)
+                for _ in range(steps):
+                    positions.append(self.move(positions[-1], self.dir_current, 1))
+                    print(positions[-1])
 
             elif j == 'T':
                 self.dir_current = self.turn(self.dir_current, steps)
@@ -42,22 +48,21 @@ class CCC:
             else:
                 raise NotImplementedError
 
-        print(self.pos)
-        self.write_out_file(*self.pos)
+        self.write_out_file(positions)
 
     def move(self, pos, cur_dir, steps):
 
         if cur_dir == 0:
-            pos = pos[0] + steps, pos[1]
+            pos = min(pos[0] + steps, self.border_x), pos[1]
 
         elif cur_dir == 1:
-            pos = pos[0], pos[1] + steps
+            pos = pos[0], min(pos[1] + steps, self.border_y)
 
         elif cur_dir == 2:
-            pos = pos[0] - steps, pos[1]
+            pos = max(pos[0] - steps, 0), pos[1]
 
         elif cur_dir == 3:
-            pos = pos[0], pos[1] - steps
+            pos = pos[0], max(pos[1] - steps, 0)
 
         else:
             raise NotImplementedError
@@ -67,16 +72,16 @@ class CCC:
     def turn(self, cur_dir, steps):
         return (cur_dir + steps) % 4
 
-    def write_out_file(self, x, y):
-        outfile = open(self.out_name, "w+")
-        outfile.write(str(x) + " " + str(y))
-        outfile.close()
+    def write_out_file(self, xy_list):
+        with open(self.out_name, "w+") as outfile:
+            outfile.write('\n'.join(f'{x} {y}' for x, y in xy_list))
 
 
 def main():
 
     ccc = CCC(sys.argv[1])
     ccc.run()
+
 
 if __name__ == "__main__":
     main()
