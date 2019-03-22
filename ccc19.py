@@ -4,12 +4,14 @@ import os
 
 class Alien:
 
-    def __init__(self, alien_id, spawn_pos, spawn_tick):
+    def __init__(self, alien_id, spawn_pos, spawn_tick, health):
         self.alien_id = alien_id
         self.spawn_tick = spawn_tick
         self.path = [spawn_pos]
         # 0, 1, 2, 3 => right, down, left, up
         self.direction = 0
+        self.alive = True
+        self.health = health
 
     def move(self, border_x, border_y):
         pos = self.path[-1]
@@ -35,6 +37,7 @@ class Tower:
         self.pos = pos
         self.range = t_range
         self.damage = damage
+        self.alien_locked = None
 
 
 class CCC:
@@ -59,12 +62,12 @@ class CCC:
             self.job = list(zip(job, amount))
 
             health, speed = f.readline().rstrip().split(' ')
-            self.health = float(health)
+            health = float(health)
             self.speed = float(speed)
 
             nr_spawns = int(f.readline().rstrip())
             spawns = [int(f.readline().rstrip()) for _ in range(nr_spawns)]
-            self.aliens = {i: Alien(i, self.pos, sp) for i, sp in enumerate(spawns)}
+            self.aliens = {i: Alien(i, self.pos, sp, health) for i, sp in enumerate(spawns)}
 
             t_damage, t_range = f.readline().rstrip().split(' ')
             t_damage = float(t_damage)
@@ -88,25 +91,25 @@ class CCC:
                 else:
                     raise NotImplementedError
 
-    def query(self):
-        # get positions at query-ticks
-        res = []
-        for q in self.queries:
-            tick = q[0]
-            alien_id = q[1]
-            alien = self.aliens[alien_id]
-
-            index = self.speed * (tick - alien.spawn_tick)
-            # print(index)
-            if index > len(alien.path)-1:
-                index = len(alien.path)-1
-            point = alien.path[int(index)]
-
-            part = f'{tick} {alien_id} {point[0]} {point[1]}'
-            res.append(part)
-            print(part)
-
-        return res
+    # def query(self):
+    #     # get positions at query-ticks
+    #     res = []
+    #     for q in self.queries:
+    #         tick = q[0]
+    #         alien_id = q[1]
+    #         alien = self.aliens[alien_id]
+    #
+    #         index = self.speed * (tick - alien.spawn_tick)
+    #         # print(index)
+    #         if index > len(alien.path)-1:
+    #             index = len(alien.path)-1
+    #         point = alien.path[int(index)]
+    #
+    #         part = f'{tick} {alien_id} {point[0]} {point[1]}'
+    #         res.append(part)
+    #         print(part)
+    #
+    #     return res
 
     def write_out_file(self, results):
         with open(self.out_name, "w+") as outfile:
@@ -116,8 +119,8 @@ def main():
 
     ccc = CCC(sys.argv[1])
     ccc.run()
-    res = ccc.query()
-    ccc.write_out_file(res)
+    #res = ccc.query()
+    #ccc.write_out_file(res)
 
 
 if __name__ == "__main__":
