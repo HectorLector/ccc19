@@ -91,36 +91,87 @@ class CCC:
                 else:
                     raise NotImplementedError
 
-    # def query(self):
-    #     # get positions at query-ticks
-    #     res = []
-    #     for q in self.queries:
-    #         tick = q[0]
-    #         alien_id = q[1]
-    #         alien = self.aliens[alien_id]
-    #
-    #         index = self.speed * (tick - alien.spawn_tick)
-    #         # print(index)
-    #         if index > len(alien.path)-1:
-    #             index = len(alien.path)-1
-    #         point = alien.path[int(index)]
-    #
-    #         part = f'{tick} {alien_id} {point[0]} {point[1]}'
-    #         res.append(part)
-    #         print(part)
-    #
-    #     return res
+    def simulate(self):
+        # get positions at query-ticks
+        tick = 0
+        while True:
+
+            # move alien and check for alien win
+            alien_pos = {}
+            for alien in self.aliens.values():
+                index = self.speed * (tick - alien.spawn_tick)
+
+                # alien not spawned
+                if index < 0:
+                    continue
+
+                if not alien.alive:
+                    continue
+
+                if index > len(alien.path)-1:
+                    # alien wins
+                    return tick, 'LOSS'
+
+                point = alien.path[int(index)]
+                alien_pos[alien.alien_id] = point
+
+            if tick != 0:
+                # simulate tower shots
+                for t in self.towers:
+
+                    # check tower locked and tower target valid = alive and in range
+                    if (t.alien_locked and t.alien_locked.alien_id in alien_pos and
+                            self.check_valid_target(t.alien_locked, alien_pos[t.alien_locked.alien_id], t)):
+                        pass
+                    else:
+                        t.alien_locked = None
+                        # check if in range
+                        distances = {a_id: self.distance(a_pos, t) for a_id, a_pos in alien_pos.items()}
+
+                        try:
+                            min_dist = min(distances.items(), key=lambda v: v[1])
+                            if min_dist[1] <= t.range:
+                                t.alien_locked = self.aliens[min_dist[0]]
+                            else:
+                                t.alien_locked = None
+                        except ValueError:
+                            t.alien_locked = None
+
+                for t in self.towers:
+                    if t.alien_locked:
+                        # shoot
+                        t.alien_locked.health -= t.damage
+
+                # check for dead aliens
+                for a in self.aliens.values():
+                    if a.health <= 0:
+                        a.alive = False
+
+                if (not any(a.alive for a in self.aliens.values()) and
+                        not any(a.spawn_tick >= tick for a in self.aliens.values())):
+                    # win
+                    return tick, 'WIN'
+
+            tick = tick + 1
+
+    def check_valid_target(self, alien, a_pos, t):
+        distance = self.distance(a_pos, t)
+        return t.range >= distance and alien.alive
+
+    def distance(self, a_pos, t):
+        return((a_pos[0] - t.pos[0]) ** 2 + (a_pos[1] - t.pos[1]) ** 2) ** (1 / 2)
 
     def write_out_file(self, results):
         with open(self.out_name, "w+") as outfile:
-            outfile.write('\n'.join(results))
+            outfile.write('\n'.join(str(x) for x in results))
 
 def main():
 
     ccc = CCC(sys.argv[1])
     ccc.run()
-    #res = ccc.query()
-    #ccc.write_out_file(res)
+    res = ccc.simulate()
+    print(res)
+    ccc.write_out_file(res)
 
 
 if __name__ == "__main__":
