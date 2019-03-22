@@ -1,8 +1,11 @@
 import sys
+import os
 
 
 def main():
     f_name = sys.argv[1]
+    out_name = os.path.splitext(os.path.basename(f_name))[0] + '.out'
+
 
     with open(f_name, 'r') as f:
         initial = f.readline()
@@ -32,6 +35,7 @@ def main():
                 raise NotImplementedError
 
         print(pos)
+        write_out_file(out_name, *pos)
 
 
 def move(pos, cur_dir, steps):
@@ -56,6 +60,7 @@ def move(pos, cur_dir, steps):
 
 def turn(cur_dir, steps):
     return (cur_dir + steps) % 4
+
 
 def write_out_file(file_name, x, y):
     outfile = open(file_name, "w+")
