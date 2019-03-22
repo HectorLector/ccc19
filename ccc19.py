@@ -67,5 +67,11 @@ def write_out_file(file_name, x, y):
     outfile.write(str(x) + " " + str(y))
     outfile.close()
 
+def write_out_file2(file_name, xy_list):
+    outfile = open(file_name, "w+")
+    for x,y in xy_list:
+        outfile.write(str(x) + " " + str(y) + "\n")
+    outfile.close()
+
 if __name__ == "__main__":
     main()
