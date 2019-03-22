@@ -2,71 +2,81 @@ import sys
 import os
 
 
-def main():
-    f_name = sys.argv[1]
-    out_name = os.path.splitext(os.path.basename(f_name))[0] + '.out'
-    out_name = 'out/' + out_name
+class CCC:
 
-    with open(f_name, 'r') as f:
-        initial = f.readline()
-        directions = f.readline()
+    def __init__(self, f_name):
+        out_name = os.path.splitext(os.path.basename(f_name))[0] + '.out'
+        self.out_name = 'out/' + out_name
 
-        x_init, y_init = initial.rstrip().split(' ')
+        with open(f_name, 'r') as f:
+            borders = f.readline()
+            initial = f.readline()
+            directions = f.readline()
 
-        job = directions.rstrip().split(' ')
+            border_x, border_y = borders.rstrip().split(' ')
+            self.border_x = int(border_x)
+            self.border_y = int(border_y)
 
-        job, amount = job[::2], job[1::2]
+            x_init, y_init = initial.rstrip().split(' ')
 
-        job = list(zip(job, amount))
+            self.pos = int(x_init), int(y_init)
 
-        pos = (int(x_init), int(y_init))
-        dir_current = 0  # 0, 1, 2, 3 => right, down, left, up
+            job = directions.rstrip().split(' ')
 
-        for j, steps in job:
+            job, amount = job[::2], job[1::2]
+
+            self.job = list(zip(job, amount))
+
+            self.dir_current = 0  # 0, 1, 2, 3 => right, down, left, up
+
+    def run(self):
+        for j, steps in self.job:
 
             steps = int(steps)
             if j == 'F':
-                pos = move(pos, dir_current, steps)
+                self.pos = self.move(self.pos, self.dir_current, steps)
 
             elif j == 'T':
-                dir_current = turn(dir_current, steps)
+                self.dir_current = self.turn(self.dir_current, steps)
 
             else:
                 raise NotImplementedError
 
-        print(pos)
-        write_out_file(out_name, *pos)
+        print(self.pos)
+        self.write_out_file(*self.pos)
+
+    def move(self, pos, cur_dir, steps):
+
+        if cur_dir == 0:
+            pos = pos[0] + steps, pos[1]
+
+        elif cur_dir == 1:
+            pos = pos[0], pos[1] + steps
+
+        elif cur_dir == 2:
+            pos = pos[0] - steps, pos[1]
+
+        elif cur_dir == 3:
+            pos = pos[0], pos[1] - steps
+
+        else:
+            raise NotImplementedError
+
+        return pos
+
+    def turn(self, cur_dir, steps):
+        return (cur_dir + steps) % 4
+
+    def write_out_file(self, x, y):
+        outfile = open(self.out_name, "w+")
+        outfile.write(str(x) + " " + str(y))
+        outfile.close()
 
 
-def move(pos, cur_dir, steps):
+def main():
 
-    if cur_dir == 0:
-        pos = pos[0] + steps, pos[1]
-
-    elif cur_dir == 1:
-        pos = pos[0], pos[1] + steps
-
-    elif cur_dir == 2:
-        pos = pos[0] - steps, pos[1]
-
-    elif cur_dir == 3:
-        pos = pos[0], pos[1] - steps
-
-    else:
-        raise NotImplementedError
-
-    return pos
-
-
-def turn(cur_dir, steps):
-    return (cur_dir + steps) % 4
-
-
-def write_out_file(file_name, x, y):
-    outfile = open(file_name, "w+")
-    for x,y in xy_list:
-        outfile.write(str(x) + " " + str(y) + "\n")
-    outfile.close()
+    ccc = CCC(sys.argv[1])
+    ccc.run()
 
 if __name__ == "__main__":
     main()
