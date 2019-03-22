@@ -5,7 +5,7 @@ import os
 def main():
     f_name = sys.argv[1]
     out_name = os.path.splitext(os.path.basename(f_name))[0] + '.out'
-
+    out_name = 'out/' + out_name
 
     with open(f_name, 'r') as f:
         initial = f.readline()
@@ -63,11 +63,6 @@ def turn(cur_dir, steps):
 
 
 def write_out_file(file_name, x, y):
-    outfile = open(file_name, "w+")
-    outfile.write(str(x) + " " + str(y))
-    outfile.close()
-
-def write_out_file2(file_name, xy_list):
     outfile = open(file_name, "w+")
     for x,y in xy_list:
         outfile.write(str(x) + " " + str(y) + "\n")
