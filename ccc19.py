@@ -1,5 +1,48 @@
 import sys
 import os
+import math
+
+
+class Alien:
+
+    def __init__(self, alien_id, speed, spawn_pos, spawn_tick):
+        self.alien_id = alien_id
+        self.speed = speed
+        self.spawn_pos = spawn_pos
+        self.spawn_tick = spawn_tick
+        self.history = [self.spawn_pos]
+        self.direction = 0
+
+    def get(self, tick):
+        return self.history[tick - self.spawn_tick]
+
+    def move(self, tick, border_x, border_y):
+        if tick <= self.spawn_tick:
+            return
+
+        pos = self.history[-1]
+
+        if self.direction == 0:
+            pos = min(pos[0] + self.speed, border_x), pos[1]
+
+        elif self.direction == 1:
+            pos = pos[0], min(pos[1] + self.speed, border_y)
+
+        elif self.direction == 2:
+            pos = max(pos[0] - self.speed, 0), pos[1]
+
+        elif self.direction == 3:
+            pos = pos[0], max(pos[1] - self.speed, 0)
+
+        else:
+            raise NotImplementedError
+
+        self.history.append(pos)
+
+    def turn(self, tick, steps):
+        if tick <= self.spawn_tick:
+            return
+        self.direction = (self.direction + steps) % 4
 
 
 class CCC:
@@ -28,63 +71,56 @@ class CCC:
 
             spawns = [int(f.readline().rstrip()) for _ in range(nr_spawns)]
 
+            self.aliens = {i: Alien(i, speed, self.pos, sp) for i, sp in enumerate(spawns)}
+
             nr_ticks = int(f.readline().rstrip())
-            ticks = [tuple(int(c) for c in f.readline().rstrip().split(' ')) for _ in range(nr_ticks)]
+            self.queries = [tuple(int(c) for c in f.readline().rstrip().split(' ')) for _ in range(nr_ticks)]
 
             self.dir_current = 0  # 0, 1, 2, 3 => right, down, left, up
 
     def run(self):
 
-        positions = [self.pos]
-        print(positions[-1])
+        tick = 0
+        for a in self.aliens.values():
+            print(f'{0}:{a.alien_id}:{a.history[-1]}')
 
         for j, steps in self.job:
 
-            steps = int(steps)
-            if j == 'F':
-                for _ in range(steps):
-                    positions.append(self.move(positions[-1], self.dir_current, 1))
-                    print(positions[-1])
+                steps = int(steps)
+                if j == 'F':
+                    for _ in range(steps):
+                        tick += 1
+                        for a in self.aliens.values():
+                            a.move(tick, self.border_x, self.border_y)
+                            print(f'{tick}:{a.alien_id}:{a.history[-1]}')
 
-            elif j == 'T':
-                self.dir_current = self.turn(self.dir_current, steps)
+                elif j == 'T':
+                    for a in self.aliens.values():
+                        a.turn(tick, steps)
 
-            else:
-                raise NotImplementedError
+                else:
+                    raise NotImplementedError
 
-        self.write_out_file(positions)
+    def query(self):
+        results = []
+        for tick, alien_id in self.queries:
+            pos = self.aliens[alien_id].get(tick)
+            pos = [int(math.floor(x)) for x in pos]
+            results.append(f'{tick} {alien_id} {pos[0]} {pos[1]}')
 
-    def move(self, pos, cur_dir, steps):
+        return results
 
-        if cur_dir == 0:
-            pos = min(pos[0] + steps, self.border_x), pos[1]
-
-        elif cur_dir == 1:
-            pos = pos[0], min(pos[1] + steps, self.border_y)
-
-        elif cur_dir == 2:
-            pos = max(pos[0] - steps, 0), pos[1]
-
-        elif cur_dir == 3:
-            pos = pos[0], max(pos[1] - steps, 0)
-
-        else:
-            raise NotImplementedError
-
-        return pos
-
-    def turn(self, cur_dir, steps):
-        return (cur_dir + steps) % 4
-
-    def write_out_file(self, xy_list):
+    def write_out_file(self, results):
         with open(self.out_name, "w+") as outfile:
-            outfile.write('\n'.join(f'{x} {y}' for x, y in xy_list))
+            outfile.write('\n'.join(results))
 
 
 def main():
 
     ccc = CCC(sys.argv[1])
     ccc.run()
+    res = ccc.query()
+    ccc.write_out_file(res)
 
 
 if __name__ == "__main__":
