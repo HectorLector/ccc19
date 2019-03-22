@@ -29,6 +29,14 @@ class Alien:
         self.direction = (self.direction + amount) % 4
 
 
+class Tower:
+
+    def __init__(self, pos, t_range, damage):
+        self.pos = pos
+        self.range = t_range
+        self.damage = damage
+
+
 class CCC:
 
     def __init__(self, f_name):
@@ -50,14 +58,21 @@ class CCC:
             job, amount = job[::2], job[1::2]
             self.job = list(zip(job, amount))
 
-            self.speed = float(f.readline().rstrip())
+            health, speed = f.readline().rstrip().split(' ')
+            self.health = float(health)
+            self.speed = float(speed)
 
             nr_spawns = int(f.readline().rstrip())
             spawns = [int(f.readline().rstrip()) for _ in range(nr_spawns)]
             self.aliens = {i: Alien(i, self.pos, sp) for i, sp in enumerate(spawns)}
 
-            nr_ticks = int(f.readline().rstrip())
-            self.queries = [tuple(int(c) for c in f.readline().rstrip().split(' ')) for _ in range(nr_ticks)]
+            t_damage, t_range = f.readline().rstrip().split(' ')
+            t_damage = float(t_damage)
+            t_range = float(t_range)
+
+            nr_towers = int(f.readline().rstrip())
+            tower_cords = [tuple(int(c) for c in f.readline().rstrip().split(' ')) for _ in range(nr_towers)]
+            self.towers = [Tower(c, t_range, t_damage) for c in tower_cords]
 
     def run(self):
 
